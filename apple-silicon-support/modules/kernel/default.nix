@@ -3,6 +3,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 {
@@ -85,6 +86,10 @@
       efiInstallAsRemovable = true;
       device = "nodev";
     };
+
+    boot.supportedFilesystems = [ "zfs" ];
+    boot.zfs.package = pkgs.zfs_unstable;
+    networking.hostId = lib.mkDefault "885f1fca";
 
     # autosuspend was enabled as safe for the PCI SD card reader
     # "Genesys Logic, Inc GL9755 SD Host Controller [17a0:9755] (rev 01)"
