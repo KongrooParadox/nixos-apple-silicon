@@ -81,6 +81,9 @@
       device = "nodev";
     };
 
+    boot.supportedFilesystems = [ "zfs" ];
+    boot.zfs.package = pkgs.zfs_2_3;
+
     # autosuspend was enabled as safe for the PCI SD card reader
     # "Genesys Logic, Inc GL9755 SD Host Controller [17a0:9755] (rev 01)"
     # by recent systemd versions, but this has a "negative interaction"
