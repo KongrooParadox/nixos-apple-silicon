@@ -26,8 +26,9 @@ let
       src = fetchFromGitHub {
         owner = "AsahiLinux";
         repo = "linux";
-        tag = "asahi-6.18.10-1";
-        hash = "sha256-ToRuhY3OFEJu36tguS6TSYgRkWPUkQRNIyp3Uc/m+8k=";
+        # rev = "fairydust";
+        rev = "61b6e714dd19b7bee1c0e6ec4234199e640c2932";
+        hash = "sha256-5eAgJTKcRdjEFzHDSrh/XReaT6Db9YN2RN1SwOs28NE=";
       };
 
       kernelPatches = [
@@ -43,6 +44,12 @@ let
 
             # Might lead to the machine rebooting if not loaded soon enough
             APPLE_WATCHDOG = yes;
+
+            APPLE_MAILBOX = yes;
+            APPLE_RTKIT = yes;
+            APPLE_RTKIT_HELPER = yes;
+            RUST_APPLE_RTKIT = yes;
+            RUST_FW_LOADER_ABSTRACTIONS = yes;
 
             # Can not be built as a module, defaults to no
             APPLE_M1_CPU_PMU = yes;
