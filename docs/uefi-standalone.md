@@ -247,16 +247,15 @@ Add the `./apple-silicon-support` directory to the imports list and switch off t
 
 The configuration above is the minimum required to produce a bootable system, but you can further edit the file as desired to perform additional configuration. Uncomment the relevant options and change their values as explained in the file. Note that some advertised features may not work properly at this time. Refer to the [NixOS installation manual](https://nixos.org/manual/nixos/stable/index.html#ch-configuration) for further guidance.
 
-Various non-free non-redistributable peripheral firmware files are required to use system hardware like Wi-Fi, Webcam or ambient light sensor. The Asahi Installer grabs these from macOS and stores them on the EFI system partition when it is created. The NixOS installer loads them from there while booting so that all hardware is available during installation. By default, the Apple Silicon support module will automatically reference the files in the EFI system partition and incorporate them into your configuration to be managed by the normal NixOS mechanisms.
+Various non-free non-redistributable peripheral firmware files are required to use system hardware like Wi-Fi, Webcam or ambient light sensor. The Asahi Installer grabs these from macOS and stores them on the EFI system partition as `vendorfw/firmware.cpio` when it is created. Both the NixOS installer and the installed system load them from there at boot time and expose them at `/lib/firmware/vendor`, so they are never copied into the Nix store and nothing needs to be configured, whether or not you use flakes. With systemd-boot or limine, the bootloader loads `vendorfw/firmware.cpio` as an additional initrd; with other bootloaders, the initrd mounts the EFI system partition to read it.
 
-If you're using flakes, you cannot point to paths outside your flake. In that case, `hardware.asahi.peripheralFirmwareDirectory` needs to be explicitly set to a directory containing `firmware.cpio` (copied from your ESP's `vendorfw/`).
+If you would rather incorporate the files into your configuration at evaluation time, set `hardware.asahi.vendorFirmware.enable = false` and point `hardware.asahi.peripheralFirmwareDirectory` at a directory containing `firmware.cpio` (copied from your ESP's `vendorfw/`).
 
 To update these Linux-loaded peripheral firmware files, use the Asahi Installer. From your MacOS installation:
 
  - `curl https://alx.sh | sh`
  - Choose the “Rebuild vendor firmware package” option when prompted
- - Quit the installer and reboot once this is done
- - Rebuild your system to pick up the new firmware files. If you explicitly set a path for `hardware.asahi.peripheralFirmwareDirectory`, making sure the `firmware.cpio` in there is up to date.
+ - Quit the installer and reboot once this is done. The new firmware is picked up on the next boot. If you set `hardware.asahi.peripheralFirmwareDirectory`, copy the new `firmware.cpio` there and rebuild your system instead.
 
 If you want to install a desktop environment, you will have to uncomment the option to enable X11 and NetworkManager, then add an option to include your favorite desktop environment. You may also wish to include graphical packages such as `firefox` in `environment.systemPackages`. For example, to install Xfce:
 ```

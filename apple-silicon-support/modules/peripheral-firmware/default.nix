@@ -5,13 +5,21 @@
   ...
 }:
 {
+  imports = [
+    ./load-at-boot.nix
+  ];
+
   config = lib.mkIf config.hardware.asahi.enable {
     assertions = lib.mkIf config.hardware.asahi.extractPeripheralFirmware [
       {
         assertion = config.hardware.asahi.peripheralFirmwareDirectory != null;
         message = ''
-          Asahi peripheral firmware extraction is enabled but the firmware
-          location appears incorrect.
+          Asahi peripheral firmware extraction is enabled but
+          hardware.asahi.peripheralFirmwareDirectory is not set.
+
+          Point it at a directory containing firmware.cpio (copied from your
+          ESP's vendorfw/), or keep hardware.asahi.vendorFirmware.enable at its
+          default (true) to load the firmware from the ESP at boot time instead.
         '';
       }
     ];
@@ -48,22 +56,24 @@
   options.hardware.asahi = {
     extractPeripheralFirmware = lib.mkOption {
       type = lib.types.bool;
-      default = true;
+      default = !config.hardware.asahi.vendorFirmware.enable;
+      defaultText = lib.literalExpression "!config.hardware.asahi.vendorFirmware.enable";
       description = ''
-        Automatically extract the non-free non-redistributable peripheral
-        firmware necessary for features like Wi-Fi, Webcam or ambient light sensor.
+        Extract the non-free non-redistributable peripheral firmware necessary
+        for features like Wi-Fi, Webcam or ambient light sensor from
+        {option}`hardware.asahi.peripheralFirmwareDirectory` at evaluation
+        time, and add it to {option}`hardware.firmware`.
+
+        By default the firmware is instead loaded from the ESP at boot time,
+        see {option}`hardware.asahi.vendorFirmware.enable`.
       '';
     };
 
     peripheralFirmwareDirectory = lib.mkOption {
       type = lib.types.nullOr lib.types.path;
 
-      default = lib.findFirst (path: builtins.pathExists (path + "/firmware.cpio")) null [
-        # path when the system is operating normally
-        /boot/vendorfw
-        # path when the system is mounted in the installer
-        /mnt/boot/vendorfw
-      ];
+      default = null;
+      example = lib.literalExpression "./vendorfw";
 
       description = ''
         Path to the directory containing the non-free non-redistributable
@@ -76,14 +86,10 @@
         The installer can also be invoked from MacOS a second time to re-create
         and add more firmware on an existing installation.
 
-        This currently defaults to the ESP.
-
-        Flake users, and those interested in maximum purity or building
-        their NixOS config from another machine will want to copy those files
-        elsewhere and specify the path manually.
-
-        In the future, this might be changed to default to loading the
-        `firmware.cpio` from the ESP at boot time, see
+        Only used when {option}`hardware.asahi.extractPeripheralFirmware` is
+        enabled, which requires disabling
+        {option}`hardware.asahi.vendorFirmware.enable`. By default the
+        firmware is loaded from the ESP at boot time instead, see
         https://asahilinux.org/docs/platform/open-os-interop/#os-handling for
         details.
       '';
