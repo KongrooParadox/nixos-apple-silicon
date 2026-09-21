@@ -16,6 +16,24 @@ in `libva-v4l2_requests-sofus13`, and can be enabled with
 `hardware.asahi.avd.vaapi-support`, which is false by default for various
 stability reasons.
 
+The peripheral firmware (`vendorfw/firmware.cpio` on the ESP) is now loaded at
+boot time rather than read at evaluation time, see
+https://asahilinux.org/docs/platform/open-os-interop/#os-handling. This is
+controlled by `hardware.asahi.vendorFirmware.enable` (`true` by default).
+systemd-boot and limine load it as an additional initrd; for other bootloaders
+(or with `hardware.asahi.vendorFirmware.bootloaderInitrd = false`), the initrd
+mounts the ESP to read it. The firmware is exposed at `/lib/firmware/vendor`.
+
+As a result, `hardware.asahi.peripheralFirmwareDirectory` now defaults to
+`null`, and `hardware.asahi.extractPeripheralFirmware` defaults to `false`.
+Flake users no longer need to copy `firmware.cpio` into their configuration or
+build with `--impure`. If you set either option, evaluation fails with an
+assertion: remove them, or set `hardware.asahi.vendorFirmware.enable = false` to
+keep incorporating the firmware at evaluation time.
+
+The installer ISO now uses the same mechanism, and reads `vendorfw/firmware.cpio`
+instead of extracting the firmware with `asahi-fwextract`.
+
 ## 2026-07-30
 
 Among other kernel updates, the kernel update to 6.18.x included a remame
